@@ -1,0 +1,13 @@
+# Reproducible environment for the USV Riemannian-geodesic path-planning simulation.
+# Python 3.13.7 (Windows 11, AMD64). All results in results.json / results.md are
+# produced by `python experiments.py` under this pinned environment (seed 0).
+numpy==2.2.3
+scipy==1.16.1
+matplotlib==3.10.8
+
+# Optional data-I/O dependency. netCDF4 is required only for the one-time
+# extraction of the real ocean-current snapshot in real_current.py
+# (load_gulfstream reads the .nc). The pinned results in results.json and the
+# figure script fig_real_current.py read the extracted data/real_current_gulfstream.npz
+# and do NOT require netCDF4.
+# netCDF4==1.7.4

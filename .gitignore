@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Generated outputs (reproduced by `python experiments.py`)
+figures/
+*.log
+
+# Raw netCDF source (91 MB; fetch via real_current.py header, not tracked)
+simulation/data/*.nc
