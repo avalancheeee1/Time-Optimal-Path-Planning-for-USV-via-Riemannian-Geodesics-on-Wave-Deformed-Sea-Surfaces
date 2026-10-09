@@ -64,15 +64,17 @@ plt.rcParams.update({
     "font.family": "sans-serif",
     "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans", "Liberation Sans",
                         "sans-serif"],
-    "font.size": 7,
+    "font.size": 8,
     "mathtext.fontset": "dejavusans",   # sans-serif math to match Arial
     "axes.linewidth": 0.8,
     "axes.labelsize": 8,
     "axes.titlesize": 8,
-    "xtick.labelsize": 7,
-    "ytick.labelsize": 7,
-    "legend.fontsize": 7,
-    "legend.frameon": False,
+    "xtick.labelsize": 8,
+    "ytick.labelsize": 8,
+    "legend.fontsize": 8,
+    "legend.frameon": True,
+    "legend.framealpha": 0.9,
+    "legend.edgecolor": "0.6",
     "xtick.direction": "out",
     "ytick.direction": "out",
     "xtick.top": False,
@@ -117,21 +119,35 @@ def _format_axis(ax):
 
 
 def _panel_label(ax, label):
-    """Bold lowercase panel label at the top-left corner (Nature style)."""
-    ax.text(-0.06, 1.02, label, transform=ax.transAxes, fontsize=8,
+    """Bold parenthesized panel label at the top-left corner (IEEE style)."""
+    ax.text(-0.06, 1.02, f"({label})", transform=ax.transAxes, fontsize=8,
             fontweight="bold", ha="left", va="bottom")
 
 
-def _plot_start_goal(ax):
-    """Mark and annotate the start and goal waypoints."""
+def _plot_start_goal(ax, textcolor="black"):
+    """Mark and annotate the start and goal waypoints.
+
+    ``textcolor`` is either a single color (applied to both labels) or a
+    ``(start, goal)`` 2-tuple for fields whose background is dark at one end
+    and light at the other (e.g. the magma arrival-time gradient in
+    ``fig_paths``).  Dark-background figures such as ``fig_real_current`` pass
+    ``"white"`` so the labels stay legible.
+    """
+    if isinstance(textcolor, tuple):
+        start_color, goal_color = textcolor
+    else:
+        start_color = goal_color = textcolor
     ax.scatter(*START, marker="o", s=90, facecolor="white",
                edgecolor=C_START, linewidth=1.2, zorder=6)
     ax.scatter(*GOAL, marker="*", s=220, color=C_GOAL,
                edgecolor=C_START, linewidth=0.5, zorder=6)
-    ax.annotate("start", START + np.array([-0.25, -0.30]), fontsize=7,
-                ha="right", va="top", zorder=7)
-    ax.annotate("goal", GOAL + np.array([0.25, 0.30]), fontsize=7,
-                ha="left", va="bottom", zorder=7)
+    # Keep the labels clear of the path: the geodesic leaves START heading
+    # up-right and arrives at GOAL from below-left, so the empty space is
+    # directly below START and directly above GOAL.
+    ax.annotate("start", START + np.array([0.0, -0.6]), fontsize=8,
+                ha="center", va="top", color=start_color, zorder=7)
+    ax.annotate("goal", GOAL + np.array([0.0, 0.6]), fontsize=8,
+                ha="center", va="bottom", color=goal_color, zorder=7)
 
 
 def _elev_norm(h):
@@ -530,7 +546,9 @@ def fig_paths(benchmark: dict, sc: Scenario):
         ls = LINE_STYLES[mode]
         ax.plot(p[:, 0], p[:, 1], color=PATH_COLORS[mode], lw=lw, ls=ls,
                 label=PATH_LABELS[mode], zorder=z)
-    _plot_start_goal(ax)
+    # The arrival-time field is dark near START and light near GOAL, so the
+    # two labels need opposite colors to stay legible on the magma gradient.
+    _plot_start_goal(ax, textcolor=("white", "black"))
     _format_axis(ax)
     ax.set_xlabel(r"$x$ (km)")
     ax.set_ylabel(r"$y$ (km)")
@@ -553,16 +571,16 @@ def fig_benchmark(benchmark: dict):
                   edgecolor="0.25", linewidth=0.6, zorder=3)
     ax.axhline(c_str, color="0.3", ls="--", lw=1.0, zorder=2)
     ax.text(3.44, c_str, "straight-line\nreference", va="bottom", ha="right",
-            fontsize=6.5, color="0.3")
+            fontsize=8, color="0.3")
     for xi, c in zip(x, c_dir):
         pct = 100 * (c_str - c) / c_str
         ax.text(xi, c + 0.10, f"{c:.2f}", ha="center", va="bottom",
-                fontsize=7.5, fontweight="bold")
+                fontsize=8, fontweight="bold")
         color = C_COST if pct < -0.05 else (C_GAIN if pct > 0.05 else "0.35")
         ax.text(xi, c + 0.72, f"{pct:+.1f}%", ha="center", va="bottom",
-                fontsize=6.5, color=color)
+                fontsize=8, color=color)
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, fontsize=7)
+    ax.set_xticklabels(labels, fontsize=8)
     ax.set_ylabel("travel time (dimensionless)")
     ax.set_ylim(0, 1.30 * max(c_dir))
     ax.grid(axis="y", color="0.85", lw=0.5, zorder=0)
@@ -594,7 +612,7 @@ def fig_regime(regime: dict):
     cs = ax.contourf(U_grid, A_grid, ratio, levels=30, cmap=CMAP_DOM,
                      vmin=0.0, vmax=2.5)
     fig.colorbar(cs, ax=ax, shrink=0.85, pad=0.02,
-                 label=r"$\log_{10}$ (current / surface added cost)")
+                 label="log10 (current / surface added cost)")
     ax.set_xlabel("current strength $U$")
     ax.set_ylabel("wave amplitude $A$")
     _panel_label(ax, "a")

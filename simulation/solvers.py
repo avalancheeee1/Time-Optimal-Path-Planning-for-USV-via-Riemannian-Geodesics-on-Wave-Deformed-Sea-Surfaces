@@ -22,13 +22,15 @@ from metrics import (
     riemannian_cost_vec,
     randers_flat_cost_vec,
     randers_surface_cost_vec,
+    wave_speed_polar,
+    zermelo_finsler_time,
 )
 
 
 # --------------------------------------------------------------------------- #
 # Local cost from scalar fields (shared by Dijkstra edge evaluation)
 # --------------------------------------------------------------------------- #
-def _cost_from_fields(mode, hx, hy, vx, vy, xi_x, xi_y):
+def _cost_from_fields(mode, hx, hy, vx, vy, xi_x, xi_y, psi, eps):
     if mode == "flat":
         return float(np.hypot(xi_x, xi_y))
     if mode == "surface":
@@ -42,6 +44,12 @@ def _cost_from_fields(mode, hx, hy, vx, vy, xi_x, xi_y):
         vxi = vx * xi_x + vy * xi_y
         d = 1.0 - v2
         return float((np.sqrt(d * xi2 + vxi * vxi) - vxi) / d)
+    if mode == "wave":
+        theta = np.arctan2(xi_y, xi_x)
+        s = wave_speed_polar(theta, psi, eps)
+        return float(np.hypot(xi_x, xi_y) / s)
+    if mode == "wave_current":
+        return float(zermelo_finsler_time((xi_x, xi_y), (vx, vy), psi, eps))
     # combined
     gxx = 1.0 + hx * hx
     gxy = hx * hy
@@ -162,6 +170,9 @@ def grid_dijkstra(scenario, start, goal, N_d=129, connectivity=8):
     hy = hy.reshape(N_d, N_d)
     vx = vx.reshape(N_d, N_d)
     vy = vy.reshape(N_d, N_d)
+    psi, eps = scenario.wave_fields(np.column_stack([Xg.ravel(), Yg.ravel()]))
+    psi = psi.reshape(N_d, N_d)
+    eps = eps.reshape(N_d, N_d)
 
     si = int(round(start[0] / h)); sj = int(round(start[1] / h))
     gi = int(round(goal[0] / h)); gj = int(round(goal[1] / h))
@@ -199,7 +210,13 @@ def grid_dijkstra(scenario, start, goal, N_d=129, connectivity=8):
             mhy = 0.5 * (hy[i, j] + hy[ni, nj])
             mvx = 0.5 * (vx[i, j] + vx[ni, nj])
             mvy = 0.5 * (vy[i, j] + vy[ni, nj])
-            c = _cost_from_fields(mode, mhx, mhy, mvx, mvy, dxi, dyi)
+            # Average the wave direction as a unit vector (angles wrap at +-pi);
+            # averaging the raw angle would alias across the branch cut.
+            cpsi = 0.5 * (np.cos(psi[i, j]) + np.cos(psi[ni, nj]))
+            spsi = 0.5 * (np.sin(psi[i, j]) + np.sin(psi[ni, nj]))
+            mpsi = np.arctan2(spsi, cpsi)
+            meps = 0.5 * (eps[i, j] + eps[ni, nj])
+            c = _cost_from_fields(mode, mhx, mhy, mvx, mvy, dxi, dyi, mpsi, meps)
             nd = d + c
             if nd < dist[q]:
                 dist[q] = nd

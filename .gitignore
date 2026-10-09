@@ -10,3 +10,7 @@ figures/
 
 # Raw netCDF source (91 MB; fetch via real_current.py header, not tracked)
 simulation/data/*.nc
+
+# Local scratch / ad-hoc scripts and artifacts (underscore-prefixed)
+simulation/_*.py
+simulation/_*.png

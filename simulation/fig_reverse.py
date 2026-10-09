@@ -33,9 +33,9 @@ def _plot_reverse_start_goal(ax):
                edgecolor=E.C_START, linewidth=1.2, zorder=6)
     ax.scatter(*E.START, marker="*", s=220, color=E.C_GOAL,
                edgecolor=E.C_START, linewidth=0.5, zorder=6)
-    ax.annotate("start", E.GOAL + np.array([0.25, 0.30]), fontsize=7,
+    ax.annotate("start", E.GOAL + np.array([0.25, 0.30]), fontsize=8,
                 ha="left", va="bottom", zorder=7)
-    ax.annotate("goal", E.START + np.array([-0.25, -0.30]), fontsize=7,
+    ax.annotate("goal", E.START + np.array([-0.25, -0.30]), fontsize=8,
                 ha="right", va="top", zorder=7)
 
 

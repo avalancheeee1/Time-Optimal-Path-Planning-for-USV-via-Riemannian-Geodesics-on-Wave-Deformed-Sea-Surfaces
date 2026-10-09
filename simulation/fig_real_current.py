@@ -11,7 +11,7 @@ written by ``real_current.py`` from the AC-PIDNN global product) and renders two
 The field is REAL observed/modelled data. The only transforms applied are a
 non-dimensionalisation by the reference USV speed ``U_ship`` and a linear
 resampling onto the domain grid; no synthetic field is substituted. Provenance is
-declared in the figure's source line and in the note printed to stdout.
+declared in the note printed to stdout.
 
 Run from the ``simulation/`` directory:
 
@@ -37,11 +37,6 @@ from solvers import direct_geodesic, straight_line_cost
 NPZ = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                    "data", "real_current_gulfstream.npz")
 
-SOURCE_LINE = (
-    "Data: AC-PIDNN sea-surface current, 8 Jan 2023 "
-    "(DOI 10.5281/zenodo.19966716)."
-)
-
 SPEED_CMAP = "viridis"
 
 
@@ -59,8 +54,8 @@ def _panel_a(ax, lon, lat, u_ms, v_ms, vmax):
               u_ms[::4, ::4], v_ms[::4, ::4],
               color="white", alpha=0.85, scale=12.0, width=0.0035,
               headwidth=3.4, headlength=4.6, headaxislength=3.8, zorder=4)
-    ax.set_xlabel("longitude ($^\\circ$E)")
-    ax.set_ylabel("latitude ($^\\circ$N)")
+    ax.set_xlabel("longitude (°E)")
+    ax.set_ylabel("latitude (°N)")
     return im
 
 
@@ -77,13 +72,17 @@ def _panel_b(ax, vx, vy, path, vmax):
               headwidth=3.4, headlength=4.6, headaxislength=3.8, zorder=4)
     ax.plot([E.START[0], E.GOAL[0]], [E.START[1], E.GOAL[1]], "--", color="0.35",
             lw=1.0, alpha=0.9, label="straight line", zorder=2)
-    ax.plot(path[:, 0], path[:, 1], color=E.C_COMBINED, lw=2.6,
+    # A saturated blue (caption: "direct geodesic (blue)") is used instead of the
+    # pale "combined" peach so the line stays legible both on the viridis field
+    # and inside the framed legend.
+    ax.plot(path[:, 0], path[:, 1], color="#1f77b4", lw=2.6,
             label="direct geodesic", zorder=5)
-    E._plot_start_goal(ax)
+    E._plot_start_goal(ax, textcolor="white")
     ax.set_xlabel(r"$x$ (km)")
     ax.set_ylabel(r"$y$ (km)")
     ax.set_aspect("equal")
-    ax.legend(loc="lower right")
+    # Externalise the legend below the axes so it does not occlude the field.
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=2)
     return im
 
 
@@ -100,7 +99,7 @@ def main():
     peak = float(_speed(vx, vy).max())
     peak_ms = float(_speed(u_ms, v_ms).max())
 
-    fig, axes = plt.subplots(2, 1, figsize=(3.5, 6.8))
+    fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.4), constrained_layout=True)
     im_a = _panel_a(axes[0], lon, lat, u_ms, v_ms, vmax=peak_ms)
     im_b = _panel_b(axes[1], vx, vy, path, vmax=peak_ms)
 
@@ -109,14 +108,11 @@ def main():
     E._panel_label(axes[0], "a")
     E._panel_label(axes[1], "b")
 
-    fig.colorbar(im_a, ax=axes[0], shrink=0.85, pad=0.03,
-                 label="surface current speed (m/s)")
-    fig.colorbar(im_b, ax=axes[1], shrink=0.85, pad=0.03,
+    # One shared colourbar: both panels plot the same (m/s) quantity on the
+    # same 0..peak_ms scale, so a single bar avoids a redundant second axis.
+    fig.colorbar(im_a, ax=axes, shrink=0.9, pad=0.02,
                  label="surface current speed (m/s)")
 
-    fig.tight_layout(rect=[0.0, 0.04, 1.0, 1.0])
-    fig.text(0.5, 0.008, SOURCE_LINE, ha="center", va="bottom", fontsize=5.8,
-             color="0.3")
     E._save_fig(fig, "fig_real_current")
 
     # Provenance / result note (declares the data are real and where they came from).
