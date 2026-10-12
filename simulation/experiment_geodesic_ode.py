@@ -234,15 +234,24 @@ def _render_figure(p_ref, p_ode, sc_cur, M_grid, c_direct, cost_ode):
 
     # (b) direct-solver discretisation error closes toward the exact ODE cost.
     ax = axes[1]
-    ax.semilogx(M_grid, c_direct, "o-", color="#5E6AD2", lw=1.6, ms=5,
-                mfc="white", mec="#5E6AD2", mew=1.3, label="direct solver")
+    ax.set_xscale("log", base=2)
+    ax.set_xticks(M_grid)
+    ax.set_xticklabels([str(int(m)) for m in M_grid])
+    ax.minorticks_off()
+    ax.plot(M_grid, c_direct, "-o", color="#5E6AD2", lw=2.0, ms=5,
+            mfc="white", mec="#5E6AD2", mew=1.5, label="direct solver", zorder=3)
     ax.axhline(cost_ode, color="#1F9D55", lw=1.6, ls="--",
-               label="geodesic ODE (exact)")
+               label="geodesic ODE (exact)", zorder=2)
+    # Tight vertical range so the convergence, not the empty span, dominates.
+    cmin = min(float(c_direct.min()), float(cost_ode))
+    cmax = max(float(c_direct.max()), float(cost_ode))
+    ax.set_ylim(cmin - 0.0008, cmax + 0.0008)
     ax.set_xlabel("interior points $M$")
     ax.set_ylabel("travel time")
-    ax.grid(True, color="0.85", lw=0.5)
+    ax.grid(axis="y", color="0.85", lw=0.5, zorder=0)
+    ax.set_axisbelow(True)
     E._format_axis(ax)
-    ax.legend(loc="upper right", fontsize=7)
+    ax.legend(loc="upper right", fontsize=7, frameon=False)
     E._panel_label(ax, "b")
 
     E._save_fig(fig, "fig_geodesic_ode")

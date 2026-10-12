@@ -136,11 +136,31 @@ def _render_figure(rows):
     modes = ["flat", "surface", "current", "combined"]
     labels = ["flat", "surface", "current", "combined"]
     saves = [100 * rows[m]["time_reduction_vs_straight"] for m in modes]
-    bars = ax.bar(labels, saves, color=["#9AA0B4", "#5E6AD2", "#C8683A", "#1F9D55"],
-                  width=0.62, zorder=3)
+    x = np.arange(len(modes))
+    colors = [E.PATH_COLORS[m] for m in modes]
+    # Lollipop (stem + dot) matching fig_benchmark: a dot marks the exact
+    # deterministic value without the zero-inflated bar area.
+    ax.vlines(x, 0.0, saves, color=colors, lw=1.6, zorder=3)
+    ax.scatter(x, saves, s=70, c=colors, edgecolor="0.25", linewidth=0.7, zorder=4)
     ax.axhline(0.0, color="0.35", lw=0.8, zorder=1)
+    for xi, s in zip(x, saves):
+        if abs(s) < 0.05:
+            # ~0%: gray label pinned just above the zero line (flat has a
+            # floating-point residue of ~1e-16, so pin it by tolerance, not sign).
+            color, label, va, off = "0.35", "0.0%", "bottom", 1.8
+        elif s > 0:
+            color, label, va, off = E.C_GAIN, f"{s:+.1f}%", "bottom", 1.8
+        else:
+            color, label, va, off = E.C_COST, f"{s:+.1f}%", "top", -1.8
+        ax.text(xi, s + off, label, ha="center", va=va, fontsize=8, color=color)
+    # Margins must clear both the dot radius and the label height (8 pt text is
+    # ~2 data units tall here), so a label never pokes past the axes edge.
+    ax.set_ylim(min(saves) - 4.5, max(saves) + 4.5)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, fontsize=8)
     ax.set_ylabel("time saving vs straight line (%)")
-    ax.grid(True, axis="y", color="0.85", lw=0.5, zorder=0)
+    ax.grid(axis="y", color="0.85", lw=0.5, zorder=0)
+    ax.set_axisbelow(True)
     E._format_axis(ax)
     E._panel_label(ax, "b")
 
