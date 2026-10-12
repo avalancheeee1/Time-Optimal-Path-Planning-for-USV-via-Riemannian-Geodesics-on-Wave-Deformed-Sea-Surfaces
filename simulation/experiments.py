@@ -565,19 +565,24 @@ def fig_benchmark(benchmark: dict):
     c_dir = [benchmark[m]["direct_geodesic_cost"] for m in modes]
     c_str = benchmark["flat"]["straight_line_cost"]
 
-    fig, ax = plt.subplots(figsize=(5.0, 3.6))
+    fig, ax = plt.subplots(figsize=(6.0, 3.8))
     x = np.arange(len(modes))
-    bars = ax.bar(x, c_dir, color=[PATH_COLORS[m] for m in modes], width=0.58,
-                  edgecolor="0.25", linewidth=0.6, zorder=3)
+    colors = [PATH_COLORS[m] for m in modes]
+    # Lollipop (stem + dot) rather than bars: for a handful of deterministic
+    # costs a dot marks the exact value without the zero-inflated bar area.
+    ax.vlines(x, 0.0, c_dir, color=colors, lw=1.6, zorder=3)
+    ax.scatter(x, c_dir, s=70, c=colors, edgecolor="0.25", linewidth=0.7, zorder=4)
     ax.axhline(c_str, color="0.3", ls="--", lw=1.0, zorder=2)
     ax.text(3.44, c_str, "straight-line\nreference", va="bottom", ha="right",
             fontsize=8, color="0.3")
     for xi, c in zip(x, c_dir):
         pct = 100 * (c_str - c) / c_str
-        ax.text(xi, c + 0.10, f"{c:.2f}", ha="center", va="bottom",
+        # Dot radius at s=70 is ~0.35 data units, so the value label must sit
+        # clear of the dot; the % label stacks above the value label.
+        ax.text(xi, c + 0.55, f"{c:.2f}", ha="center", va="bottom",
                 fontsize=8, fontweight="bold")
         color = C_COST if pct < -0.05 else (C_GAIN if pct > 0.05 else "0.35")
-        ax.text(xi, c + 0.72, f"{pct:+.1f}%", ha="center", va="bottom",
+        ax.text(xi, c + 1.25, f"{pct:+.1f}%", ha="center", va="bottom",
                 fontsize=8, color=color)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=8)
@@ -631,16 +636,29 @@ def fig_regime(regime: dict):
 
 
 def fig_convergence(M_grid, costs):
-    fig, ax = plt.subplots(figsize=(4.4, 3.1))
-    ax.plot(M_grid, costs, "o-", color=C_COMBINED, lw=1.5, ms=5,
-            mfc="white", mec=C_COMBINED, mew=1.2, zorder=3)
+    fig, ax = plt.subplots(figsize=(6.5, 4.0))
+    # Dark amber (deepened C_COMBINED) -- keeps the warm "combined" identity on a
+    # white background while staying legible (the pale-peach swatch is invisible
+    # here). Solid line with white-filled circle markers at each sampled M,
+    # light horizontal grid -- reviewer-chosen.
+    C_LINE = "#B8741A"
+    # Area fill down to the converged asymptote (cost at the largest M): the
+    # shrinking gap *is* the resolution-independence claim, made visible.
+    ax.fill_between(M_grid, costs, costs[-1], color=C_LINE, alpha=0.15, zorder=1)
+    ax.axhline(costs[-1], color="0.4", lw=1.0, ls="--", zorder=2)
+    ax.plot(M_grid, costs, "-o", color=C_LINE, lw=2.0, ms=5, mfc="white",
+            mec=C_LINE, mew=1.5, zorder=3)
     ax.set_xscale("log", base=2)
     ax.set_xticks(M_grid)
     ax.set_xticklabels([str(int(m)) for m in M_grid])
     ax.minorticks_off()
+    # Tight vertical range so the convergence trend, not the empty span, dominates.
+    cmin, cmax = costs.min(), costs.max()
+    ax.set_ylim(cmin - 0.0008, cmax + 0.0008)
     ax.set_xlabel("interior points $M$")
     ax.set_ylabel("optimal cost")
-    ax.grid(True, which="major", color="0.85", lw=0.5, zorder=0)
+    ax.grid(axis="y", color="0.85", lw=0.5, zorder=0)
+    ax.set_axisbelow(True)
     _format_axis(ax)
     fig.tight_layout()
     _save_fig(fig, "fig_convergence")

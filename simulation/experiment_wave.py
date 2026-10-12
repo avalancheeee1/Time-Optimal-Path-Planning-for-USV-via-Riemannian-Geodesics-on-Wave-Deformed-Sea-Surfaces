@@ -50,7 +50,7 @@ S = E.START
 G = E.GOAL
 
 C_ARC = "#5E6AD2"    # arc-length (surface) geodesic -- indigo
-C_WAV = "#1F9D55"    # heading-dependent (wave) geodesic -- green
+C_WAV = "#B8741A"    # heading-dependent (wave) geodesic -- dark amber
 
 
 def _ground_length(path):
@@ -197,12 +197,15 @@ def _render_figure(sc_wave, p_surf, p_wave, eps_grid, penalties):
 
     # (b) wrong-metric penalty vs sea severity.
     ax = axes[1]
-    ax.plot(eps_grid, 100 * penalties, "o-", color=C_WAV, lw=1.6, ms=5,
-            mfc="white", mec=C_WAV, mew=1.3, zorder=3)
-    ax.axhline(0.0, color="0.35", lw=0.8, zorder=1)
+    loss = 100 * penalties
+    ax.fill_between(eps_grid, loss, 0.0, color=C_WAV, alpha=0.15, zorder=1)
+    ax.axhline(0.0, color="0.4", lw=1.0, ls="--", zorder=2)
+    ax.plot(eps_grid, loss, "-o", color=C_WAV, lw=2.0, ms=5, mfc="white",
+            mec=C_WAV, mew=1.5, zorder=3)
     ax.set_xlabel("peak head-sea slowdown $\\varepsilon_0$")
     ax.set_ylabel("wrong-metric time loss (%)")
-    ax.grid(True, color="0.85", lw=0.5, zorder=0)
+    ax.grid(axis="y", color="0.85", lw=0.5, zorder=0)
+    ax.set_axisbelow(True)
     E._format_axis(ax)
     E._panel_label(ax, "b")
 

@@ -146,7 +146,7 @@ def _render_figure(vx, vy, p_cur, p_wc, eps_grid, c_sweep, c_cur):
     im = ax.pcolormesh(Xg, Yg, spd, shading="auto", cmap="viridis")
     ax.plot(p_cur[:, 0], p_cur[:, 1], color="#5E6AD2", lw=2.4, ls="--",
             label="current only", zorder=4)
-    ax.plot(p_wc[:, 0], p_wc[:, 1], color="#1F9D55", lw=2.6,
+    ax.plot(p_wc[:, 0], p_wc[:, 1], color="#B8741A", lw=2.6,
             label="wave + current", zorder=5)
     ax.plot([E.START[0], E.GOAL[0]], [E.START[1], E.GOAL[1]], "--", color="0.35",
             lw=1.0, alpha=0.8, label="straight line", zorder=2)
@@ -160,14 +160,16 @@ def _render_figure(vx, vy, p_cur, p_wc, eps_grid, c_sweep, c_cur):
 
     # (b) severity sweep of the wave-added cost (real psi fixed).
     ax = axes[1]
-    ax.plot(eps_grid, c_sweep, "o-", color="#1F9D55", lw=1.6, ms=5, mfc="white",
-            mec="#1F9D55", mew=1.3, zorder=3)
+    ax.fill_between(eps_grid, c_sweep, c_cur, color="#B8741A", alpha=0.15, zorder=1)
     ax.axhline(c_cur, color="#5E6AD2", lw=1.4, ls="--", label="current only",
-               zorder=1)
+               zorder=2)
+    ax.plot(eps_grid, c_sweep, "-o", color="#B8741A", lw=2.0, ms=5, mfc="white",
+            mec="#B8741A", mew=1.5, zorder=3, label="wave + current")
     ax.set_xlabel("peak head-sea slowdown $\\varepsilon_0$")
     ax.set_ylabel("travel time")
-    ax.grid(True, color="0.85", lw=0.5, zorder=0)
-    ax.legend(loc="upper left", fontsize=7)
+    ax.legend(loc="upper left", fontsize=7, frameon=False)
+    ax.grid(axis="y", color="0.85", lw=0.5, zorder=0)
+    ax.set_axisbelow(True)
     E._format_axis(ax)
     E._panel_label(ax, "b")
 

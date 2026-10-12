@@ -25,6 +25,7 @@ from metrics import (
     wave_speed_polar,
     zermelo_finsler_time,
 )
+from gradients import polyline_gradient
 
 
 # --------------------------------------------------------------------------- #
@@ -105,6 +106,10 @@ def direct_geodesic(start, goal, scenario, M=32, n_restarts=6, seed=0):
         pts = np.vstack([start, z.reshape(M, 2), goal])
         return polyline_cost(pts, scenario)
 
+    def gradient(z):
+        pts = np.vstack([start, z.reshape(M, 2), goal])
+        return polyline_gradient(pts, scenario).ravel()
+
     best_cost = np.inf
     best_path = None
     straight = np.linspace(start, goal, M + 2)[1:-1]
@@ -115,7 +120,7 @@ def direct_geodesic(start, goal, scenario, M=32, n_restarts=6, seed=0):
         else:
             z0 = (straight + rng.normal(0.0, 0.4, (M, 2))).ravel()
         res = minimize(
-            objective, z0, method="L-BFGS-B", bounds=bounds,
+            objective, z0, method="L-BFGS-B", bounds=bounds, jac=gradient,
             options={"maxiter": 300, "ftol": 1e-10, "gtol": 1e-7},
         )
         pts = np.vstack([start, res.x.reshape(M, 2), goal])

@@ -14,3 +14,7 @@ simulation/data/*.nc
 # Local scratch / ad-hoc scripts and artifacts (underscore-prefixed)
 simulation/_*.py
 simulation/_*.png
+
+# Pre-analytic-gradient backup snapshots (finite-difference run), kept locally
+# for provenance but must not ship in the public repo.
+*.preanalytic

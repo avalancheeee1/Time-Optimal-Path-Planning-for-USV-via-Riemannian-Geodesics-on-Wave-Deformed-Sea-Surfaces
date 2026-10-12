@@ -1,10 +1,10 @@
-# Time-Optimal Path Planning for USVs via Riemannian Geodesics on Wave-Deformed Sea Surfaces
+# Time-Optimal Path Planning for Uncrewed Surface Vehicles in Waves and Currents via a Unified Randers–Finsler Metric
 
 Reproducible code and data for
 
 > **X. Li, J. Zhang, P. Zhang, and L. Tan**, "Time-Optimal Path Planning for
-> Unmanned Surface Vehicles via Riemannian Geodesics on Wave-Deformed Sea
-> Surfaces," under review.
+> Uncrewed Surface Vehicles in Waves and Currents via a Unified Randers–Finsler
+> Metric," under review.
 
 This repository reproduces every numeric result, table, and figure in the
 paper. The planning problem is cast as a **Zermelo navigation problem** on a
