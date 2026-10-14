@@ -265,10 +265,11 @@ def _render_figure(sc, path_free, R_star, c_free, rows):
     ax.axhline(c_free, color="0.35", lw=1.0, ls=":", zorder=1)
     # Text clear of the knee line: the R_min* label sits to its left so no
     # glyph touches the dashed vline, and the geodesic-cost note goes to the
-    # empty top-left corner instead of across the flat curve segment.
+    # empty top-left corner instead of across the flat curve segment.  The
+    # note is kept short so it ends well before the dashed vline.
     ax.text(R_star - 0.12, ax.get_ylim()[1], "$R_{\\min}^*$", va="top",
             ha="right", fontsize=8, color="0.4")
-    ax.text(0.02, 0.96, f"dotted: unconstrained geodesic ({c_free:.4f})",
+    ax.text(0.02, 0.94, f"dotted: geodesic ({c_free:.4f})",
             transform=ax.transAxes, va="top", ha="left", fontsize=7,
             color="0.35")
     ax.set_xlabel("minimum turning radius $R_{\\min}$ (km)")
