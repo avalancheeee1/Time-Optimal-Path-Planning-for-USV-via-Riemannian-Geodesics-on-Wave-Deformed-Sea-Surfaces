@@ -568,26 +568,27 @@ def fig_benchmark(benchmark: dict):
     fig, ax = plt.subplots(figsize=(6.0, 3.8))
     x = np.arange(len(modes))
     colors = [PATH_COLORS[m] for m in modes]
-    # Lollipop (stem + dot) rather than bars: for a handful of deterministic
-    # costs a dot marks the exact value without the zero-inflated bar area.
-    ax.vlines(x, 0.0, c_dir, color=colors, lw=1.6, zorder=3)
+    # Dot plot on a zoomed axis. The four costs span only ~9.7-11.6, so a stem
+    # from zero would render them nearly identical and bury the current's ~14%
+    # saving; dots against the straight-line reference make the divergence
+    # obvious. The zoomed window also leaves room for the value/%-labels to sit
+    # clear of the reference line instead of crossing it.
     ax.scatter(x, c_dir, s=70, c=colors, edgecolor="0.25", linewidth=0.7, zorder=4)
     ax.axhline(c_str, color="0.3", ls="--", lw=1.0, zorder=2)
     ax.text(3.44, c_str, "straight-line\nreference", va="bottom", ha="right",
             fontsize=8, color="0.3")
     for xi, c in zip(x, c_dir):
         pct = 100 * (c_str - c) / c_str
-        # Dot radius at s=70 is ~0.35 data units, so the value label must sit
-        # clear of the dot; the % label stacks above the value label.
-        ax.text(xi, c + 0.55, f"{c:.2f}", ha="center", va="bottom",
+        ax.text(xi, c + 0.14, f"{c:.2f}", ha="center", va="bottom",
                 fontsize=8, fontweight="bold")
         color = C_COST if pct < -0.05 else (C_GAIN if pct > 0.05 else "0.35")
-        ax.text(xi, c + 1.25, f"{pct:+.1f}%", ha="center", va="bottom",
+        pct_label = "0.0%" if abs(pct) < 0.05 else f"{pct:+.1f}%"
+        ax.text(xi, c + 0.34, pct_label, ha="center", va="bottom",
                 fontsize=8, color=color)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=8)
     ax.set_ylabel("travel time (dimensionless)")
-    ax.set_ylim(0, 1.30 * max(c_dir))
+    ax.set_ylim(min(c_dir) - 0.5, max(c_dir) + 0.6)
     ax.grid(axis="y", color="0.85", lw=0.5, zorder=0)
     _format_axis(ax)
     fig.tight_layout()
