@@ -253,7 +253,6 @@ def _render_figure(sc, path_free, R_star, c_free, rows):
     ax.set_xlabel(r"$x$ (km)")
     ax.set_ylabel(r"$y$ (km)")
     ax.set_aspect("equal")
-    ax.legend(loc="lower right", fontsize=6, framealpha=0.9)
     E._panel_label(ax, "a")
 
     # (b) travel time vs R_min with the knee at R_min*.
@@ -264,10 +263,14 @@ def _render_figure(sc, path_free, R_star, c_free, rows):
             mec="#B8741A", mew=1.5, zorder=3)
     ax.axvline(R_star, color="0.45", lw=1.1, ls="--", zorder=2)
     ax.axhline(c_free, color="0.35", lw=1.0, ls=":", zorder=1)
-    ax.text(R_star, ax.get_ylim()[1], "$R_{\\min}^*$", va="top", ha="left",
-            fontsize=8, color="0.4")
-    ax.text(Rvals_arr[-1], c_free, "geodesic cost", va="bottom", ha="right",
-            fontsize=7, color="0.35")
+    # Text clear of the knee line: the R_min* label sits to its left so no
+    # glyph touches the dashed vline, and the geodesic-cost note goes to the
+    # empty top-left corner instead of across the flat curve segment.
+    ax.text(R_star - 0.12, ax.get_ylim()[1], "$R_{\\min}^*$", va="top",
+            ha="right", fontsize=8, color="0.4")
+    ax.text(0.02, 0.96, f"dotted: unconstrained geodesic ({c_free:.4f})",
+            transform=ax.transAxes, va="top", ha="left", fontsize=7,
+            color="0.35")
     ax.set_xlabel("minimum turning radius $R_{\\min}$ (km)")
     ax.set_ylabel("travel time (dimensionless)")
     ax.set_xlim(Rvals_arr.min(), Rvals_arr.max())
@@ -275,6 +278,15 @@ def _render_figure(sc, path_free, R_star, c_free, rows):
     ax.set_axisbelow(True)
     E._format_axis(ax)
     E._panel_label(ax, "b")
+
+    # Legend outside the axes (below panel a): inside the axes it occludes the
+    # path family converging on the goal.  Axes.legend does not accept the
+    # "outside" locations, so this goes through fig.legend, which
+    # constrained_layout reserves space for.
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="outside lower left", ncol=5,
+               fontsize=5.5, frameon=False, columnspacing=1.2,
+               handlelength=1.5)
 
     E._save_fig(fig, "fig_curvature")
 
