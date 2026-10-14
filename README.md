@@ -14,11 +14,14 @@ time-optimal path is the geodesic of the resulting **Randers metric**. Geodesics
 are computed with a from-scratch fast-marching (FMM) solver, optionally with a
 Selling lattice-basis-reduction preconditioner.
 
-Beyond the core benchmark, four supplementary experiments (P1--P4) carry the
+Beyond the core benchmark, six supplementary experiments (P1--P6) carry the
 headline contributions: a heading-dependent Finsler wave metric (P1), an
 independent geodesic-ODE optimality cross-check (P2), robustness across current
-geometry and start/goal pair (P3), and a real wave-plus-current dual-field
-validation (P4). Each writes its own `results_*.json`.
+geometry and start/goal pair (P3), a real wave-plus-current dual-field
+validation (P4), a second-order perturbation-theory check (P5), and a
+minimum-turning-radius (Randers--Dubins) sweep (P6). P1--P4 write their own
+`results_*.json`; P5 prints its closed-form checks to stdout, and P6 prints the
+Table-IX sweep to stdout and writes `figures/fig_curvature.*`.
 
 ## Repository layout
 
@@ -36,6 +39,8 @@ simulation/
 ├── experiment_geodesic_ode.py     # P2: geodesic ODE two-point shooting cross-check
 ├── experiment_robustness.py       # P3: robustness across geometry and start/goal pair
 ├── experiment_real_wave_current.py  # P4: real wave + current dual-field validation
+├── experiment_perturbation.py       # P5: second-order perturbation-theory checks
+├── experiment_curvature.py          # P6: minimum-turning-radius (Randers-Dubins) sweep
 ├── test_fmm.py            # unit tests for the FMM solver and geodesic correctness
 ├── test_sanity.py         # sanity tests for the metric / scenario
 ├── verify_reproducibility.py  # re-runs experiments and checks byte-for-byte reproducibility
@@ -67,19 +72,24 @@ regenerates **byte-for-byte**. Figures are written to `simulation/figures/`
 Run the tests:
 
 ```bash
-python -m pytest test_fmm.py test_sanity.py -q
+python test_fmm.py && python test_sanity.py
 ```
 
-## Additional experiments (P1--P4)
+The gates are plain scripts (not pytest cases): each asserts deterministic
+values and exits non-zero on regression.
 
-Each experiment is a standalone script that writes its own `results_*.json` with
-a deterministic seed; run them from `simulation/`:
+## Additional experiments (P1--P6)
+
+Each experiment is a standalone script with a deterministic seed; run them from
+`simulation/`:
 
 ```bash
 python experiment_wave.py             # P1 -> results_wave.json
 python experiment_geodesic_ode.py     # P2 -> results_geodesic_ode.json
 python experiment_robustness.py       # P3 -> results_robustness.json
 python experiment_real_wave_current.py  # P4 -> results_real_wave_current.json
+python experiment_perturbation.py     # P5 -> stdout (closed-form T2 checks)
+python experiment_curvature.py        # P6 -> stdout (Table IX sweep) + figures/fig_curvature.*
 ```
 
 - **P1 — heading-dependent wave metric** (`experiment_wave.py`). Replaces the
@@ -102,6 +112,17 @@ python experiment_real_wave_current.py  # P4 -> results_real_wave_current.json
   Pairs the real AC-PIDNN current (Gulf Stream, 2023-01-08) with a real WW3
   wave field from the same region and date, validating the heading-dependent
   metric of P1 against real data (see the [Data](#data) section).
+- **P5 — second-order perturbation check** (`experiment_perturbation.py`).
+  Verifies on the deterministic seed-0 scenario that the wave surface enters the
+  time-optimal cost at O(ε²) with no linear term: the path-fixed cost is
+  quadratic in the wave-slope scale ε, its coefficient matches the closed-form
+  second-order coefficient T₂ = ∫F₂ (split into surface-only and wave–current
+  coupling parts), and the re-optimized T*(ε) matches T₀ + ε²T₂ to O(ε⁴).
+- **P6 — minimum turning radius** (`experiment_curvature.py`). Attaches a soft
+  curvature penalty (discrete turning angle per local segment length, ground
+  frame) to the direct solver and sweeps the minimum turning radius R_min,
+  producing the Randers–Dubins family of Table IX: the knee at R_min\* = 5.25 km
+  (cost 9.8808) and the unconstrained geodesic below it (cost 9.8747).
 
 ## Reproducibility
 
